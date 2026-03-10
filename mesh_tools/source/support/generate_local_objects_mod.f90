@@ -78,6 +78,7 @@ subroutine generate_local_objects( local_mesh_bank,       &
   character(str_def), optional,      intent(in) :: lbc_parent_name
 
   ! Local variables
+  logical(l_def), parameter :: enforce_constraints = .false.
   type(local_mesh_type) :: local_mesh
   type(partition_type)  :: partition
 
@@ -133,6 +134,7 @@ subroutine generate_local_objects( local_mesh_bank,       &
                                 decomposition,          &
                                 max_stencil_depth,      &
                                 generate_inner_halos,   &
+                                enforce_constraints,    &
                                 partition_id,           &
                                 n_partitions,           &
                                 mapping_factor )

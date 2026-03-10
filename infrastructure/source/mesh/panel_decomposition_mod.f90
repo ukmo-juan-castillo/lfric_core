@@ -86,7 +86,7 @@ module panel_decomposition_mod
                                         mapping_factor,   &
                                         num_cells_x,      &
                                         num_cells_y,      &
-                                        any_maps,         &
+                                        check_constraints,         &
                                         partition_width,  &
                                         partition_height, &
                                         partition_x_pos,  &
@@ -101,7 +101,7 @@ module panel_decomposition_mod
                                        mapping_factor,   &
                                        num_cells_x,      &
                                        num_cells_y
-      logical,        intent(in)    :: any_maps
+      logical,        intent(in)    :: check_constraints
 
       integer(i_def), intent(inout) :: partition_width,  &
                                        partition_height, &
@@ -134,7 +134,7 @@ contains
   !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
   !> @param[in]    num_cells_x      The panel's size in the x direction
   !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[in]    any_maps         Whether there exist maps between meshes that
+  !> @param[in]    check_constraints         Whether there exist maps between meshes that
   !>                                must having aligning partitions
   !> @param[inout] partition_width  The partition's size in the x direction
   !> @param[inout] partition_height The partition's size in the y direction
@@ -146,7 +146,7 @@ contains
                                    mapping_factor,   &
                                    num_cells_x,      &
                                    num_cells_y,      &
-                                   any_maps,         &
+                                   check_constraints,         &
                                    partition_width,  &
                                    partition_height, &
                                    partition_x_pos,  &
@@ -159,7 +159,7 @@ contains
                                      mapping_factor,   &
                                      num_cells_x,      &
                                      num_cells_y
-    logical,        intent(in)    :: any_maps
+    logical,        intent(in)    :: check_constraints
     integer(i_def), intent(inout) :: partition_width,  &
                                      partition_height, &
                                      partition_x_pos,  &
@@ -183,7 +183,7 @@ contains
                               num_xprocs,  &
                               num_yprocs,  &
                               panel_ranks, &
-                              any_maps )
+                              check_constraints )
 
     call xy_decomposition( relative_rank,    &
                            num_cells_x,      &
@@ -240,7 +240,7 @@ contains
   !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
   !> @param[in]    num_cells_x      The panel's size in the x direction
   !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[in]    any_maps         Whether there exist maps between meshes that
+  !> @param[in]    check_constraints         Whether there exist maps between meshes that
   !>                                must having aligning partitions
   !> @param[inout] partition_width  The partition's size in the x direction
   !> @param[inout] partition_height The partition's size in the y direction
@@ -252,7 +252,7 @@ contains
                                  mapping_factor,   &
                                  num_cells_x,      &
                                  num_cells_y,      &
-                                 any_maps,         &
+                                 check_constraints,         &
                                  partition_width,  &
                                  partition_height, &
                                  partition_x_pos,  &
@@ -265,7 +265,7 @@ contains
                                      mapping_factor,   &
                                      num_cells_x,      &
                                      num_cells_y
-    logical,        intent(in)    :: any_maps
+    logical,        intent(in)    :: check_constraints
     integer(i_def), intent(inout) :: partition_width,  &
                                      partition_height, &
                                      partition_x_pos,  &
@@ -303,7 +303,7 @@ contains
         num_yprocs = panel_ranks / num_xprocs
 
         ! If we have any maps then x and y procs must divide the coarsest panel
-        if ( (.not. any_maps) .or. &
+        if ( (.not. check_constraints) .or. &
              ( mod( mp_num_cells_x, num_xprocs ) == 0 .and. &
                mod( mp_num_cells_y, num_yprocs ) == 0 ) &
         ) then
@@ -321,7 +321,7 @@ contains
         num_yprocs = panel_ranks / num_xprocs
 
         ! If we have any maps then x and y procs must divide the coarsest panel
-        if ( (.not. any_maps) .or. &
+        if ( (.not. check_constraints) .or. &
              ( mod( mp_num_cells_x, num_xprocs ) == 0 .and. &
                mod( mp_num_cells_y, num_yprocs ) == 0 ) &
         ) then
@@ -341,7 +341,7 @@ contains
                               num_xprocs,  &
                               num_yprocs,  &
                               panel_ranks, &
-                              any_maps )
+                              check_constraints )
 
     call xy_decomposition( relative_rank,    &
                            num_cells_x,      &
@@ -388,7 +388,7 @@ contains
   !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
   !> @param[in]    num_cells_x      The panel's size in the x direction
   !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[in]    any_maps         Whether there exist maps between meshes that
+  !> @param[in]    check_constraints         Whether there exist maps between meshes that
   !>                                must having aligning partitions
   !> @param[inout] partition_width  The partition's size in the x direction
   !> @param[inout] partition_height The partition's size in the y direction
@@ -400,7 +400,7 @@ contains
                                 mapping_factor,   &
                                 num_cells_x,      &
                                 num_cells_y,      &
-                                any_maps,         &
+                                check_constraints,         &
                                 partition_width,  &
                                 partition_height, &
                                 partition_x_pos,  &
@@ -413,7 +413,7 @@ contains
                                      mapping_factor,   &
                                      num_cells_x,      &
                                      num_cells_y
-    logical,        intent(in)    :: any_maps
+    logical,        intent(in)    :: check_constraints
     integer(i_def), intent(inout) :: partition_width,  &
                                      partition_height, &
                                      partition_x_pos,  &
@@ -431,7 +431,7 @@ contains
                               num_xprocs,  &
                               num_yprocs,  &
                               panel_ranks, &
-                              any_maps )
+                              check_constraints )
 
     call xy_decomposition( relative_rank,    &
                            num_cells_x,      &
@@ -478,7 +478,7 @@ contains
   !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
   !> @param[in]    num_cells_x      The panel's size in the x direction
   !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[in]    any_maps         Whether there exist maps between meshes that
+  !> @param[in]    check_constraints         Whether there exist maps between meshes that
   !>                                must having aligning partitions
   !> @param[inout] partition_width  The partition's size in the x direction
   !> @param[inout] partition_height The partition's size in the y direction
@@ -490,7 +490,7 @@ contains
                                    mapping_factor,   &
                                    num_cells_x,      &
                                    num_cells_y,      &
-                                   any_maps,         &
+                                   check_constraints,         &
                                    partition_width,  &
                                    partition_height, &
                                    partition_x_pos,  &
@@ -503,7 +503,7 @@ contains
                                      mapping_factor,   &
                                      num_cells_x,      &
                                      num_cells_y
-    logical,        intent(in)    :: any_maps
+    logical,        intent(in)    :: check_constraints
     integer(i_def), intent(inout) :: partition_width,  &
                                      partition_height, &
                                      partition_x_pos,  &
@@ -521,7 +521,7 @@ contains
                               num_xprocs,  &
                               num_yprocs,  &
                               panel_ranks, &
-                              any_maps )
+                              check_constraints )
 
     call xy_decomposition( relative_rank,    &
                            num_cells_x,      &
@@ -578,7 +578,7 @@ contains
                                             mapping_factor,   &
                                             num_cells_x,      &
                                             num_cells_y,      &
-                                            any_maps,         &
+                                            check_constraints,         &
                                             partition_width,  &
                                             partition_height, &
                                             partition_x_pos,  &
@@ -591,7 +591,7 @@ contains
                                      mapping_factor,   &
                                      num_cells_x,      &
                                      num_cells_y
-    logical,        intent(in)    :: any_maps
+    logical,        intent(in)    :: check_constraints
     integer(i_def), intent(inout) :: partition_width,  &
                                      partition_height, &
                                      partition_x_pos,  &
@@ -620,7 +620,7 @@ contains
       num_xprocs = start_xprocs - i
 
       ! If there are any intermesh maps then xprocs must also divide the domain.
-      if ( ( mod(mp_num_cells_x, num_xprocs) == 0 ) .or. .not. any_maps ) then
+      if ( ( mod(mp_num_cells_x, num_xprocs) == 0 ) .or. .not. check_constraints ) then
         found_factors = .true.
         exit
       end if
@@ -628,7 +628,7 @@ contains
       num_xprocs = start_xprocs + i
 
       ! If there are any intermesh maps then xprocs must also divide the domain.
-      if ( ( mod(mp_num_cells_x, num_xprocs) == 0 ) .or. .not. any_maps ) then
+      if ( ( mod(mp_num_cells_x, num_xprocs) == 0 ) .or. .not. check_constraints ) then
         found_factors = .true.
         exit
       end if
@@ -694,7 +694,7 @@ contains
                                               mapping_factor,   &
                                               num_cells_x,      &
                                               num_cells_y,      &
-                                              any_maps,         &
+                                              check_constraints,         &
                                               partition_width,  &
                                               partition_height, &
                                               partition_x_pos,  &
@@ -707,7 +707,7 @@ contains
                                      mapping_factor,   &
                                      num_cells_x,      &
                                      num_cells_y
-    logical,        intent(in)    :: any_maps
+    logical,        intent(in)    :: check_constraints
     integer(i_def), intent(inout) :: partition_width,  &
                                      partition_height, &
                                      partition_x_pos,  &
@@ -729,7 +729,7 @@ contains
       call log_event(log_scratch_space, LOG_LEVEL_ERROR)
     end if
 
-    if ( any_maps .and. ( mod(num_cells_x, num_xprocs) /= 0 ) ) then
+    if ( check_constraints .and. ( mod(num_cells_x, num_xprocs) /= 0 ) ) then
       write(log_scratch_space, "(a,i0,a,i0)") "Requested number of ranks in x direction ", num_xprocs, &
         " must divide panel x dimension ", num_cells_x
       call log_event(log_scratch_space, LOG_LEVEL_ERROR)
@@ -840,13 +840,13 @@ contains
   !> @param[in] num_xprocs  The number of partitions in the x direction
   !> @param[in] num_yprocs  The number of partitions in the y direction
   !> @param[in] panel_ranks The number of ranks the panel is to be split into
-  !> @param[in] any_maps    Whether any mesh maps exist for this mesh
+  !> @param[in] check_constraints    Whether any mesh maps exist for this mesh
   subroutine xy_defensive_checks( num_cells_x, &
                                   num_cells_y, &
                                   num_xprocs,  &
                                   num_yprocs,  &
                                   panel_ranks, &
-                                  any_maps )
+                                  check_constraints )
     implicit none
 
     integer(i_def), intent(in) :: num_cells_x, &
@@ -854,7 +854,7 @@ contains
                                   num_xprocs,  &
                                   num_yprocs,  &
                                   panel_ranks
-    logical       , intent(in) :: any_maps
+    logical       , intent(in) :: check_constraints
 
     if ( num_xprocs <=0 .or. num_yprocs <= 0 ) then
       write(log_scratch_space, "(a,i0,a,i0,a)") &
@@ -878,7 +878,7 @@ contains
     end if
 
     ! Equal divisions are only required if there are maps between meshes
-    if (any_maps) then
+    if (check_constraints) then
       if ( mod(num_cells_x, num_xprocs) /= 0 ) then
         write(log_scratch_space, "(a,i0,a,i0)") "Requested number of ranks in x direction ", num_xprocs, &
           " must divide panel x dimension ", num_cells_x

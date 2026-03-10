@@ -140,6 +140,7 @@ contains
     real(r_def)    :: known_cell_coords(2)
 
     logical(l_def) :: generate_inner_halos
+    logical(l_def), parameter :: enforce_constraints = .false.
 
     logical(l_def) :: answer
 
@@ -175,6 +176,7 @@ contains
                                 decomposition,         &
                                 max_stencil_depth,     &
                                 generate_inner_halos,  &
+                                enforce_constraints,   &
                                 this%getProcessRank(), &
                                 this%getNumProcesses() )
 
@@ -460,6 +462,7 @@ contains
     integer(i_def) :: local_rank
     integer(i_def) :: total_ranks
     logical(l_def) :: generate_inner_halos
+    logical(l_def), parameter :: enforce_constraints = .true.
 
     type(global_mesh_type), target  :: global_mesh
     type(global_mesh_type), pointer :: global_mesh_ptr => null()
@@ -490,10 +493,10 @@ contains
       global_mesh = global_mesh_type( ugrid_mesh_data )
       call ugrid_mesh_data%clear()
       global_mesh_ptr => global_mesh
-      partition = partition_type( global_mesh_ptr, partitioner_ptr,     &
-                                  decomposition, max_stencil_depth,      &
-                                  generate_inner_halos, local_rank,    &
-                                  total_ranks )
+      partition = partition_type( global_mesh_ptr, partitioner_ptr,          &
+                                  decomposition, max_stencil_depth,          &
+                                  generate_inner_halos, enforce_constraints, &
+                                  local_rank, total_ranks )
 
       call local_mesh(i)%initialise( global_mesh_ptr, partition )
       nullify(global_mesh_ptr)

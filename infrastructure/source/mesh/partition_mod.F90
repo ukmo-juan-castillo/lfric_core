@@ -154,6 +154,7 @@ module partition_mod
                                       max_stencil_depth, &
                                       mapping_factor, &
                                       generate_inner_halos, &
+                                      enforce_constraints, &
                                       global_cell_id, &
                                       num_inner, &
                                       num_edge, &
@@ -171,6 +172,7 @@ module partition_mod
       integer(i_def), intent(in)                 :: max_stencil_depth
       integer(i_def), intent(in)                 :: mapping_factor
       logical(l_def), intent(in)                 :: generate_inner_halos
+      logical(l_def), intent(in)                 :: enforce_constraints
       integer(i_def), intent(inout), allocatable :: global_cell_id(:)
       integer(i_def), intent(out)                :: num_inner(:), &
                                                     num_edge,     &
@@ -204,6 +206,7 @@ contains
                                   decomposition, &
                                   max_stencil_depth, &
                                   generate_inner_halos, &
+                                  enforce_constraints, &
                                   local_rank, &
                                   total_ranks, &
                                   mapping_factor ) result(self)
@@ -217,6 +220,7 @@ contains
   integer(i_def),                   intent(in) :: local_rank
   integer(i_def),                   intent(in) :: total_ranks
   logical(l_def),                   intent(in) :: generate_inner_halos
+  logical(l_def),                   intent(in) :: enforce_constraints
   integer(i_def), optional,         intent(in) :: mapping_factor
 
   type(partition_type), target :: self
@@ -250,6 +254,7 @@ contains
                     self%max_stencil_depth, &
                     mf_actual, &
                     generate_inner_halos, &
+                    enforce_constraints, &
                     self%global_cell_id, &
                     self%num_inner, &
                     self%num_edge, &
@@ -420,6 +425,7 @@ contains
                                  max_stencil_depth,     &
                                  mapping_factor,        &
                                  generate_inner_halos,  &
+                                 enforce_constraints,   &
                                  partitioned_cells,     &
                                  num_inner,             &
                                  num_edge,              &
@@ -441,6 +447,7 @@ contains
     integer(i_def),              intent(out)   :: num_halo( : )
     integer(i_def),              intent(out)   :: num_ghost
     logical(l_def),              intent(in)    :: generate_inner_halos
+    logical(l_def),              intent(in)    :: enforce_constraints
 
     ! A biperiodic mesh has 1 panel
     num_panels = 1
@@ -453,6 +460,7 @@ contains
                                         max_stencil_depth, &
                                         mapping_factor, &
                                         generate_inner_halos, &
+                                        enforce_constraints, &
                                         partitioned_cells, &
                                         num_inner, &
                                         num_edge, &
@@ -500,6 +508,7 @@ contains
                                       max_stencil_depth,      &
                                       mapping_factor,         &
                                       generate_inner_halos,   &
+                                      enforce_constraints,    &
                                       partitioned_cells,      &
                                       num_inner,              &
                                       num_edge,               &
@@ -521,6 +530,7 @@ contains
     integer(i_def),              intent(out)   :: num_halo( : )
     integer(i_def),              intent(out)   :: num_ghost
     logical(l_def),              intent(in)    :: generate_inner_halos
+    logical(l_def),              intent(in)    :: enforce_constraints
 
     ! A cubed sphere has 6 panels
     num_panels = 6
@@ -533,6 +543,7 @@ contains
                                         max_stencil_depth, &
                                         mapping_factor, &
                                         generate_inner_halos, &
+                                        enforce_constraints, &
                                         partitioned_cells, &
                                         num_inner, &
                                         num_edge, &
@@ -576,6 +587,7 @@ contains
                                              max_stencil_depth,     &
                                              mapping_factor,        &
                                              generate_inner_halos,  &
+                                             enforce_constraints,   &
                                              partitioned_cells,     &
                                              num_inner,             &
                                              num_edge,              &
@@ -602,6 +614,7 @@ contains
     integer(i_def),              intent(out)   :: num_halo( : )
     integer(i_def),              intent(out)   :: num_ghost
     logical(l_def),              intent(in)    :: generate_inner_halos
+    logical(l_def),              intent(in)    :: enforce_constraints
 
     integer(i_def) :: i
 
@@ -638,6 +651,7 @@ contains
                                              max_stencil_depth,     &
                                              mapping_factor,        &
                                              generate_inner_halos,  &
+                                             enforce_constraints,   &
                                              partitioned_cells,     &
                                              num_inner,             &
                                              num_edge,              &
@@ -671,6 +685,7 @@ contains
     integer(i_def),              intent(out)   :: num_ghost               ! Number of cells that are ghost cells - surrounding,
                                                                           ! but not in the partitioned domain
     logical(l_def),              intent(in)    :: generate_inner_halos   ! Flag to control the generation of inner halos
+    logical(l_def),              intent(in)    :: enforce_constraints     ! Apply contraints on the partitoner solutions
 
     integer(i_def) :: face               ! which face of the cube is implied by local_rank (0->5)
     integer(i_def) :: start_cell         ! lowest cell id of the face implaced by local_rank
@@ -684,6 +699,7 @@ contains
     integer(i_def) :: ix, iy             ! loop counters over cells on this partition in x- and y-dirns
     integer(i_def) :: void_cell          ! Cell id that marks the cell as a cell outside of the partition.
     logical        :: any_maps           ! Whether there exist maps between meshes, meaning their partitions must align.
+    logical(l_def) :: check_constraints
     integer(i_def) :: start1, end1, inc1 ! Loop indices for inserting cells into the partition
     integer(i_def) :: start2, end2, inc2 ! Loop indices for inserting cells into the partition
 
@@ -730,6 +746,12 @@ contains
     cross_panels = .false.
     n_cross_panels = 1
     any_maps    = global_mesh%get_nmaps() > 0
+
+    if (any_maps .and. enforce_constraints) then
+      check_constraints = .true.
+    else
+      check_constraints = .false.
+    end if
 
     nullify( last )
     nullify( start_subsect )
@@ -881,18 +903,16 @@ contains
 
     ! Work out the start index and number of cells (in x- and y-dirn) for
     ! the local partition
-    call decomposition%get_partition( relative_rank,    &
-                                      panel_ranks,      &
-                                      mapping_factor,   &
-                                      num_cells_x,      &
-                                      num_cells_y,      &
-                                      any_maps,         &
-                                      num_x,            &
-                                      num_y,            &
-                                      start_x,          &
+    call decomposition%get_partition( relative_rank,     &
+                                      panel_ranks,       &
+                                      mapping_factor,    &
+                                      num_cells_x,       &
+                                      num_cells_y,       &
+                                      check_constraints, &
+                                      num_x,             &
+                                      num_y,             &
+                                      start_x,           &
                                       start_y )
-
-
 
     ! Set up limits for finding cells
     start1 = start_x

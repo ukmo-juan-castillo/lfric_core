@@ -127,6 +127,7 @@ integer(i_def) :: target_local_mesh_id
 integer(i_def) :: mesh_id(4)
 integer(i_def) :: local_mesh_id
 integer(i_def) :: i, j, n, x, y
+logical(l_def), parameter :: enforce_constraints = .true.
 
 procedure (partitioner_interface), pointer :: partitioner_ptr => null()
 type(custom_decomposition_type) :: decomposition
@@ -155,8 +156,9 @@ do i=1, size(mesh_names)
   global_mesh_ptr => global_mesh_collection % get_global_mesh( mesh_names(i) )
 
   partition =  partition_type( global_mesh_ptr, partitioner_ptr, &
-                               decomposition, max_stencil_depth,  &
-                               generate_inner_halos,            &
+                               decomposition, max_stencil_depth, &
+                               generate_inner_halos,             &
+                               enforce_constraints,              &
                                local_rank, total_ranks )
   call local_mesh%initialise( global_mesh_ptr, partition )
   call local_mesh%init_cell_owner()
@@ -212,8 +214,9 @@ do i=1, size(mesh_names)
   global_mesh_ptr => global_mesh_collection % get_global_mesh (mesh_names(i))
   source_local_mesh_ptr => local_mesh_collection % get_local_mesh (mesh_names(i))
   partition =  partition_type( global_mesh_ptr, partitioner_ptr, &
-                               decomposition, max_stencil_depth,  &
-                               generate_inner_halos,            &
+                               decomposition, max_stencil_depth, &
+                               generate_inner_halos,             &
+                               enforce_constraints,              &
                                local_rank, total_ranks )
   mesh = mesh_type( source_local_mesh_ptr, extrusion )
   mesh_id(i) =  mesh_collection % add_new_mesh( mesh )

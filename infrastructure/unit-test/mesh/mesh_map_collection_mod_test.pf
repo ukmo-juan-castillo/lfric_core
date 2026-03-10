@@ -57,6 +57,7 @@ module mesh_map_collection_mod_test
   real(r_def),    parameter :: domain_top            = 10000.0_r_def
   real(r_def),    parameter :: radius                = 6371229.0_r_def
   logical(l_def), parameter :: generate_inner_halos = .true.
+  logical(l_def), parameter :: enforce_constraints  = .true.
 
 
 contains
@@ -115,6 +116,7 @@ contains
                                        decomposition,          &
                                        max_stencil_depth,      &
                                        generate_inner_halos,  &
+                                       enforce_constraints,    &
                                        local_rank, total_ranks )
 
     call coarse_local_mesh%initialise( coarse_global_mesh_ptr, &
@@ -135,6 +137,7 @@ contains
                                        decomposition,          &
                                        max_stencil_depth,      &
                                        generate_inner_halos,  &
+                                       enforce_constraints,    &
                                        local_rank, total_ranks )
 
     call fine_local_mesh%initialise( fine_global_mesh_ptr, &

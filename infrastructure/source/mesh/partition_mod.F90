@@ -649,6 +649,7 @@ contains
                                       linked_list_item_type, &
                                       before
     use reference_element_mod, only : W, S, E, N
+    use sci_query_mod,         only : is_lbc
 
     implicit none
 
@@ -711,6 +712,7 @@ contains
     integer :: num_cells_y          ! number of cells across a panel in y-direction
     integer :: start_sort, end_sort ! range over which to sort cells
     integer :: depth                ! counter over the halo depths
+    integer :: rim_width            ! rim width of a lbc mesh
     integer :: orig_num_in_list     ! number of cells in list before halos are added
     integer :: ncell                ! Number of cells
     integer :: cell_id              ! Id of cell in the partition
@@ -722,7 +724,7 @@ contains
     integer :: nprocs(2)            ! number of processors in the x- & y-direction
     integer :: xproc                ! number of processsors in x-direction
     integer :: yproc                ! number of processsors in y-direction
-    integer(i_def) :: num_apply
+    integer(i_def) :: num_apply, tmpx, tmpy
     logical(l_def) :: periodic_xy(2) ! Periodic in the x/y-axes
 
     periodic_xy = global_mesh%get_mesh_periodicity()
@@ -947,22 +949,207 @@ contains
     ! covers multiple panels
     check_orientation = cross_panels
 
-    do iy = start2, end2, inc2
-      do ix = start1, end1, inc1
-        cell_id = global_mesh%get_cell_id(start_cell, ix-1, iy-1, &
-                                          check_orientation)
-        call partition%insert_item( linked_list_int_type( cell_id ) )
+    if ( is_lbc(global_mesh) ) then
 
-        ! If this is an edge cell then add it to the list of known edge cells
-        ! (if it is not already there)
-        if ( ix == start1 .or. ix == end1 .or. iy == start2 .or. iy == end2 ) then
-          if ( .not. known_cells%item_exists(cell_id) ) then
-            call known_cells%insert_item( linked_list_int_type( cell_id ) )
-          end if
+      ! If the mesh is a lbc mesh, partition it in the same way as the parent mesh,
+      ! even if there are partitions containing no mesh points
+      if( cross_panels )then
+        call log_event( 'LBC meshes containing cross pannels ' // &
+                        'can not currently be partitioned', LOG_LEVEL_ERROR )
+      endif
+
+      ! Calculate rim width: solution of a quadratic equation
+      rim_width = nint(0.25*((num_cells_x+num_cells_y) - &
+                  sqrt((num_cells_x+num_cells_y)*(num_cells_x+num_cells_y) - &
+                       4.0*global_mesh%get_ncells())))
+      write(log_scratch_space,*) "JMCS cell size:", num_cells_x, num_cells_y, rim_width, &
+                                                    global_mesh%get_ncells()
+      call log_event( log_scratch_space, lOG_LEVEL_INFO )
+
+      ! check if points in the south rim are contained in the partition
+      if (start2 <= rim_width) then
+        if (end2 > rim_width) then
+          tmpy = rim_width
+        else
+          tmpy = end2
         end if
+        do iy = start2, tmpy, inc2
+          do ix = start1, end1, inc1
+            cell_id = global_mesh%get_cell_id(start_cell, ix-1, iy-1)
+            call partition%insert_item( linked_list_int_type( cell_id ) )
 
+            write(log_scratch_space,*) "JMCS S:", cell_id
+            call log_event( log_scratch_space, lOG_LEVEL_INFO )
+
+            ! If this is an edge cell then add it to the list of known edge cells
+            if ( ix == start1 .or. ix == end1 ) then
+              if ( .not. known_cells%item_exists(cell_id) ) then
+                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+                write(log_scratch_space,*) "JMCS S bound:", cell_id
+                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+              end if
+            end if
+            if ( iy == start2 .or. &
+                (iy == tmpy .and. tmpy < rim_width) .or. &
+                (iy == end2 .and. end2 == rim_width .and. &
+                (ix <= rim_width .or. ix > num_cells_x - rim_width)) .or. &
+                (iy == rim_width .and. &
+                (ix >= rim_width .and. ix <= num_cells_x - rim_width + 1)) ) then
+              if ( .not. known_cells%item_exists(cell_id) ) then
+                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+                write(log_scratch_space,*) "JMCS S bound:", cell_id
+                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+              end if
+            end if
+          end do
+        end do
+      end if
+
+      ! check if points in the west rim are contained in the partition
+      if (start1 <= rim_width) then
+        if (end1 > rim_width) then
+          tmpx = rim_width
+        else
+          tmpx = end1
+        end if
+        do iy = start2, end2, inc2
+          do ix = start1, tmpx, inc1
+            cell_id = global_mesh%get_cell_id(start_cell, ix-1, iy-1)
+            if ( .not. partition%item_exists(cell_id) ) then
+              call partition%insert_item( linked_list_int_type( cell_id ) )
+              write(log_scratch_space,*) "JMCS W:", cell_id
+              call log_event( log_scratch_space, lOG_LEVEL_INFO )
+            end if
+
+            ! If this is an edge cell then add it to the list of known edge cells
+            if ( ix == start1 .or. &
+                (ix == tmpx .and. ix < rim_width) .or. &
+                (ix == end1 .and. end1 == rim_width .and. &
+                (iy > num_cells_y - rim_width .or. iy <= rim_width)) .or. &
+                (ix == rim_width .and. &
+                (iy >= rim_width .and. iy <= num_cells_y - rim_width + 1)) ) then
+              if ( .not. known_cells%item_exists(cell_id) ) then
+                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+                write(log_scratch_space,*) "JMCS W bound:", cell_id
+                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+              end if
+            end if
+            if ( iy == start2 .or. iy == end2 ) then
+              if ( .not. known_cells%item_exists(cell_id) ) then
+                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+                write(log_scratch_space,*) "JMCS W bound:", cell_id
+                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+              end if
+            end if
+          end do
+        end do
+      end if
+
+      ! move the start cell to the north-west corner
+      start_cell = global_mesh%get_cell_id(start_cell, 0, num_cells_y-1)
+ 
+      ! check if points in the north rim are contained in the partition
+      if (end2 > num_cells_y - rim_width) then
+        if ( start2 <= num_cells_y - rim_width + 1
+          tmpy = num_cells_y - rim_width + 1
+        else
+          tmpy = start2
+        end if
+        do iy = tmpy, end2, inc2
+          do ix = start1, end1, inc1
+            cell_id = global_mesh%get_cell_id(start_cell, ix-1, iy-num_cells_y)
+            if ( .not. partition%item_exists(cell_id) ) then
+              call partition%insert_item( linked_list_int_type( cell_id ) )
+              write(log_scratch_space,*) "JMCS N:", cell_id
+              call log_event( log_scratch_space, lOG_LEVEL_INFO )
+            end if
+
+            ! If this is an edge cell then add it to the list of known edge cells
+            if ( ix == start1 .or. ix == end1 ) then
+              if ( .not. known_cells%item_exists(cell_id) ) then
+                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+                write(log_scratch_space,*) "JMCS N bound:", cell_id
+                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+              end if
+            end if
+            if ( iy == end2 .or. &
+                (iy == tmpy .and. tmpy > num_cells_y - rim_width + 1) .or. &
+                (iy == tmpy .and. tmpy == num_cells_y - rim_width + 1 .and. &
+                (ix <= rim_width .or. ix > num_cells_x - rim_width)) .or. & 
+                (iy == num_cells_y - rim_width + 1 .and. &
+                (ix >= rim_width .and. ix <= num_cells_x - rim_width + 1)) ) then
+              if ( .not. known_cells%item_exists(cell_id) ) then
+                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+                write(log_scratch_space,*) "JMCS N bound:", cell_id
+                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+              end if
+            end if
+          end do
+        end do
+      end if
+
+      ! move the start cell to the south-east corner
+      start_cell = global_mesh%get_cell_id(sw_corner_cells(face), num_cells_x-1, 0)
+ 
+      ! check if points in the east rim are contained in the partition
+      if (end1 > num_cells_x - rim_width) then
+        if ( start1 <= num_cells_x - rim_width + 1
+          tmpx = num_cells_x - rim_width + 1
+        else
+          tmpx = start1
+        end if
+        do iy = start2, end2, inc2
+          do ix = tmpx, end1, inc1
+            cell_id = global_mesh%get_cell_id(start_cell, ix-num_cells_x, iy-1)
+            if ( .not. partition%item_exists(cell_id) ) then
+              call partition%insert_item( linked_list_int_type( cell_id ) )
+              write(log_scratch_space,*) "JMCS E:", cell_id
+              call log_event( log_scratch_space, lOG_LEVEL_INFO )
+            end if
+
+            ! If this is an edge cell then add it to the list of known edge cells
+            if ( iy == start2 .or. iy == end2 ) then
+              if ( .not. known_cells%item_exists(cell_id) ) then
+                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+                write(log_scratch_space,*) "JMCS E bound:", cell_id
+                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+              end if
+            end if
+            if ( ix == end1 .or. &
+                (ix == tmpx .and. tmpx > num_cells_x - rim_width + 1) .or. &
+                (ix == tmpx .and. tmpx == num_cells_x - rim_width + 1 .and. &
+                (iy <= rim_width .or. iy > num_cells_y - rim_width)) .or. & 
+                (ix == num_cells_x - rim_width + 1 .and. &
+                (iy >= rim_width .and. iy <= num_cells_y - rim_width + 1)) ) then
+              if ( .not. known_cells%item_exists(cell_id) ) then
+                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+                write(log_scratch_space,*) "JMCS E bound:", cell_id
+                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+              end if
+            end if
+          end do
+        end do
+      end if
+    else
+
+      do iy = start2, end2, inc2
+        do ix = start1, end1, inc1
+          cell_id = global_mesh%get_cell_id(start_cell, ix-1, iy-1, &
+                                            check_orientation)
+          call partition%insert_item( linked_list_int_type( cell_id ) )
+
+          ! If this is an edge cell then add it to the list of known edge cells
+          ! (if it is not already there)
+          if ( ix == start1 .or. ix == end1 .or. iy == start2 .or. iy == end2 ) then
+            if ( .not. known_cells%item_exists(cell_id) ) then
+              call known_cells%insert_item( linked_list_int_type( cell_id ) )
+            end if
+          end if
+
+        end do
       end do
-    end do
+
+    end if
 
     ! Create a linked-list of all cells known to the partition, including halos.
     ! This will be ordered as:

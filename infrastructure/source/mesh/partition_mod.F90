@@ -28,7 +28,7 @@ module partition_mod
                               LOG_LEVEL_INFO,    &
                               LOG_LEVEL_ERROR,   &
                               LOG_LEVEL_DEBUG
-  use constants_mod,   only: i_def, r_def, l_def
+  use constants_mod,   only: i_def, r_def, l_def, str_def
   use panel_decomposition_mod, only: panel_decomposition_type
 
   implicit none
@@ -644,12 +644,11 @@ contains
                                              num_halo,              &
                                              num_ghost )
 
-    use linked_list_int_mod,   only : linked_list_int_type
-    use linked_list_mod,       only : linked_list_type, &
-                                      linked_list_item_type, &
-                                      before
-    use reference_element_mod, only : W, S, E, N
-    use sci_query_mod,         only : is_lbc
+    use linked_list_int_mod,        only : linked_list_int_type
+    use linked_list_mod,            only : linked_list_type, &
+                                           linked_list_item_type, &
+                                           before
+    use reference_element_mod,      only : W, S, E, N
 
     implicit none
 
@@ -724,8 +723,18 @@ contains
     integer :: nprocs(2)            ! number of processors in the x- & y-direction
     integer :: xproc                ! number of processsors in x-direction
     integer :: yproc                ! number of processsors in y-direction
-    integer(i_def) :: num_apply, tmpx, tmpy
+    integer(i_def) :: num_apply
     logical(l_def) :: periodic_xy(2) ! Periodic in the x/y-axes
+    logical(l_def) :: is_lbc
+    integer :: cell_next_n          ! The cell to the north of the cell being queried
+    integer(i_def) :: tmpx, tmpy
+    integer(i_def) :: start_cell_lbc
+
+    if (index(global_mesh%get_mesh_name(),"-lbc", .true.) > 0) then
+      is_lbc = .true.
+    else
+      is_lbc = .false.
+    end if
 
     periodic_xy = global_mesh%get_mesh_periodicity()
     void_cell   = global_mesh%get_void_cell()
@@ -793,7 +802,23 @@ contains
       end do
 
       ! Infer num_cells_y from the total domin size and num_cells_x
-      num_cells_y=global_mesh%get_ncells()/num_cells_x
+      if (is_lbc) then
+        ! Because the lbc mesh has a hole in the middle of unknown size,
+        ! its y dimension can not be calculated just by looking at the
+        ! total number of cells
+        ! Starting in the SW corner of the mesh so must walk North on non-periodic
+        ! meshes to determine number of cells in the y direction
+        num_cells_y = 1
+        call global_mesh%get_cell_next(sw_corner_cells(1),cell_next)
+        cell_next_n = cell_next(N)
+        do while (cell_next_n /= sw_corner_cells(1) .and. cell_next_n /= void_cell)
+          num_cells_y=num_cells_y+1
+          call global_mesh%get_cell_next(cell_next_n, cell_next)
+          cell_next_n = cell_next(N)
+        end do
+      else
+        num_cells_y=global_mesh%get_ncells()/num_cells_x
+      end if
 
     else
       if( num_panels == 6 .and.              &
@@ -949,8 +974,7 @@ contains
     ! covers multiple panels
     check_orientation = cross_panels
 
-    if ( is_lbc(global_mesh) ) then
-
+    if ( is_lbc ) then
       ! If the mesh is a lbc mesh, partition it in the same way as the parent mesh,
       ! even if there are partitions containing no mesh points
       if( cross_panels )then
@@ -1046,18 +1070,18 @@ contains
       end if
 
       ! move the start cell to the north-west corner
-      start_cell = global_mesh%get_cell_id(start_cell, 0, num_cells_y-1)
+      start_cell_lbc = global_mesh%get_cell_id(start_cell, 0, num_cells_y-1)
  
       ! check if points in the north rim are contained in the partition
       if (end2 > num_cells_y - rim_width) then
-        if ( start2 <= num_cells_y - rim_width + 1
+        if ( start2 <= num_cells_y - rim_width + 1 ) then
           tmpy = num_cells_y - rim_width + 1
         else
           tmpy = start2
         end if
         do iy = tmpy, end2, inc2
           do ix = start1, end1, inc1
-            cell_id = global_mesh%get_cell_id(start_cell, ix-1, iy-num_cells_y)
+            cell_id = global_mesh%get_cell_id(start_cell_lbc, ix-1, iy-num_cells_y)
             if ( .not. partition%item_exists(cell_id) ) then
               call partition%insert_item( linked_list_int_type( cell_id ) )
               write(log_scratch_space,*) "JMCS N:", cell_id
@@ -1089,18 +1113,18 @@ contains
       end if
 
       ! move the start cell to the south-east corner
-      start_cell = global_mesh%get_cell_id(sw_corner_cells(face), num_cells_x-1, 0)
+      start_cell_lbc = global_mesh%get_cell_id(start_cell, num_cells_x-1, 0)
  
       ! check if points in the east rim are contained in the partition
       if (end1 > num_cells_x - rim_width) then
-        if ( start1 <= num_cells_x - rim_width + 1
+        if ( start1 <= num_cells_x - rim_width + 1 ) then
           tmpx = num_cells_x - rim_width + 1
         else
           tmpx = start1
         end if
         do iy = start2, end2, inc2
           do ix = tmpx, end1, inc1
-            cell_id = global_mesh%get_cell_id(start_cell, ix-num_cells_x, iy-1)
+            cell_id = global_mesh%get_cell_id(start_cell_lbc, ix-num_cells_x, iy-1)
             if ( .not. partition%item_exists(cell_id) ) then
               call partition%insert_item( linked_list_int_type( cell_id ) )
               write(log_scratch_space,*) "JMCS E:", cell_id

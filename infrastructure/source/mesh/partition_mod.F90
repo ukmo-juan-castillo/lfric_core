@@ -1098,7 +1098,7 @@ contains
             end if
             if ( iy == end2 .or. &
                 (iy == tmpy .and. tmpy > num_cells_y - rim_width + 1) .or. &
-                (iy == tmpy .and. tmpy == num_cells_y - rim_width + 1 .and. &
+                (iy == start2 .and. start2 == num_cells_y - rim_width + 1 .and. &
                 (ix <= rim_width .or. ix > num_cells_x - rim_width)) .or. & 
                 (iy == num_cells_y - rim_width + 1 .and. &
                 (ix >= rim_width .and. ix <= num_cells_x - rim_width + 1)) ) then
@@ -1141,7 +1141,7 @@ contains
             end if
             if ( ix == end1 .or. &
                 (ix == tmpx .and. tmpx > num_cells_x - rim_width + 1) .or. &
-                (ix == tmpx .and. tmpx == num_cells_x - rim_width + 1 .and. &
+                (ix == start1 .and. start1 == num_cells_x - rim_width + 1 .and. &
                 (iy <= rim_width .or. iy > num_cells_y - rim_width)) .or. & 
                 (ix == num_cells_x - rim_width + 1 .and. &
                 (iy >= rim_width .and. iy <= num_cells_y - rim_width + 1)) ) then

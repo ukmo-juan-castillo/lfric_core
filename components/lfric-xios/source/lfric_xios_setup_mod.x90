@@ -927,8 +927,6 @@ contains
       call coord_output(i)%initialise( vector_space = domain_fs )
     end do
 
-    write(0,*) "JMCS init ugrid domain d1:", trim(domain_id), " ", trim(mesh%get_mesh_name()), &
-                              index(mesh%get_mesh_name(), "-lbc")
     ! Convert field to physical nodal output & sample chi on nodal points
     ! This uses a psykal-lite version of nodal_coordinates_kernel_type to allow
     ! for meshes which have 0 halos (i.e. rim meshes)

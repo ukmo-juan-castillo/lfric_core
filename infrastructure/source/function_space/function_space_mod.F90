@@ -889,7 +889,6 @@ contains
     real(r_def), intent(in) :: xi(3)
     real(r_def) :: p(self%dim_space)
 
-    write(0,*) "JMCS in evaluate basis:"
     p(:) = poly1d(self%basis_order(1, df), xi(1), self%basis_x(:, 1, df), self%basis_index(1, df)) &
          * poly1d(self%basis_order(2, df), xi(2), self%basis_x(:, 2, df), self%basis_index(2, df)) &
          * poly1d(self%basis_order(3, df), xi(3), self%basis_z(:, df),    self%basis_index(3, df)) &

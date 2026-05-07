@@ -110,8 +110,6 @@ contains
       else
         topology = topology_fully_periodic
       end if
-!      write(0,*) "JMCS fem f2:", local_rank, i, mesh%get_extrusion_id(), TWOD, &
-!                                 trim(all_mesh_names(i)), trim(mesh_name)
       ! Only create coordinates for 3D meshes
       if (mesh%get_extrusion_id() /= TWOD) then
 

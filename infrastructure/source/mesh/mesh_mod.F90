@@ -477,6 +477,7 @@ contains
                  0.0_r_def,    &
                  self%domain_depth )
 
+    if (self%ncells > 0) then
     ! Calculate next-to cells and vertices on cells
     allocate( self%cell_next(self%reference_element%get_number_faces(), &
                              self%ncells_with_ghost) )
@@ -691,6 +692,7 @@ contains
                      self%last_edge_cell_per_coloured_tile,                 &
                      self%last_halo_tile_per_colour,                        &
                      self%last_halo_cell_per_coloured_tile )
+    end if
 
   end function mesh_constructor
 

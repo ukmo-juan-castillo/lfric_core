@@ -7,10 +7,8 @@
 !> @brief  Module to assign the values of the coordinates of the mesh to a field.
 module driver_coordinates_mod
 
-  use base_mesh_config_mod,      only: geometry,                &
-                                       geometry_planar,         &
+  use base_mesh_config_mod,      only: geometry_planar,         &
                                        geometry_spherical,      &
-                                       topology,                &
                                        topology_fully_periodic, &
                                        topology_non_periodic
   use constants_mod,             only: r_def, i_def, l_def, &
@@ -56,7 +54,7 @@ contains
   !> @param[in,out] chi      Model coordinate array of size 3 of fields
   !> @param[in]     panel_id Field giving the ID of mesh panels
   !> @param[in]     mesh     Mesh on which this field is attached
-  subroutine assign_coordinate_field(chi, panel_id, mesh)
+  subroutine assign_coordinate_field(chi, panel_id, mesh, geometry, topology)
 
     use domain_mod,            only: domain_type
     use field_mod,             only: field_type, field_proxy_type
@@ -72,6 +70,8 @@ contains
     type( field_type ),  intent( inout )        :: chi(3)
     type( field_type ),  intent( inout )        :: panel_id
     type( mesh_type  ),  intent( in ),  pointer :: mesh
+    integer( i_def ),    intent( in )           :: geometry
+    integer( i_def ),    intent( in )           :: topology
 
     integer(i_def),                     pointer :: map(:,:)          => null()
     integer(i_def),                     pointer :: map_pid(:,:)      => null()
@@ -138,6 +138,7 @@ contains
     dof_coords => chi_proxy(1)%vspace%get_nodes( )
 
     domain = mesh%get_domain()
+    if (panel_id_proxy%vspace%get_ndof_glob() > 0) then
     if ( domain%is_lonlat()) then
       domain_max_x = radians_to_degrees * domain%maximum_lonlat(axis=1)
       domain_min_y = radians_to_degrees * domain%minimum_lonlat(axis=2)
@@ -145,11 +146,17 @@ contains
       domain_max_x = domain%maximum_xy(axis=1)
       domain_min_y = domain%minimum_xy(axis=2)
     end if
+    else
+      domain_max_x = 0.0
+      domain_min_y = 0.0
+    end if
 
     allocate( global_dof_id( panel_id_proxy%vspace%get_ndof_glob() ) )
+    if (panel_id_proxy%vspace%get_ndof_glob() > 0) then
     do i = 1,panel_id_proxy%vspace%get_ndof_glob()
       global_dof_id(i) = mesh%get_gid_from_lid(i)
     end do
+    end if
     local_mesh => mesh%get_local_mesh()
     panel_ncells = local_mesh%get_ncells_global_mesh()/local_mesh%get_num_panels_global_mesh()
 
@@ -181,7 +188,9 @@ contains
                             map_pid(:,cell),       &
                             panel_id_proxy%data,   &
                             global_dof_id,         &
-                            panel_ncells    )
+                            panel_ncells,          &
+                            geometry,              &
+                            topology    )
 
         call mesh%get_column_coords(cell,column_coords)
 
@@ -202,7 +211,9 @@ contains
                                     panel_id_proxy%data, &
                                     ndf_pid,             &
                                     undf_pid,            &
-                                    map_pid(:,cell)      )
+                                    map_pid(:,cell),     &
+                                    geometry,            &
+                                    topology      )
       end do
 
     else if ( geometry == geometry_spherical .and. &
@@ -215,7 +226,9 @@ contains
                             map_pid(:,cell),       &
                             panel_id_proxy%data,   &
                             global_dof_id,         &
-                            panel_ncells   )
+                            panel_ncells,          &
+                            geometry,              &
+                            topology   )
 
         call mesh%get_column_coords(cell,column_coords)
 
@@ -248,7 +261,9 @@ contains
                             map_pid(:,cell),       &
                             panel_id_proxy%data,   &
                             global_dof_id,         &
-                            panel_ncells    )
+                            panel_ncells,          &
+                            geometry,              &
+                            topology    )
 
         call mesh%get_column_coords(cell,column_coords)
 
@@ -307,7 +322,9 @@ contains
                             map_pid,            &
                             panel_id,           &
                             global_dof_id,      &
-                            panel_ncells )
+                            panel_ncells,       &
+                            geometry,           &
+                            topology )
 
     implicit none
 
@@ -316,6 +333,8 @@ contains
     real(kind=r_def),    intent(out) :: panel_id(undf_pid)
     integer(kind=i_def), intent(in)  :: global_dof_id(undf_pid)
     integer(kind=i_def), intent(in)  :: panel_ncells
+    integer(kind=i_def), intent(in)  :: geometry
+    integer(kind=i_def), intent(in)  :: topology
 
     ! Internal variables
     integer(kind=i_def) :: vert, k
@@ -371,7 +390,9 @@ contains
                                     panel_id,      &
                                     ndf_pid,       &
                                     undf_pid,      &
-                                    map_pid        )
+                                    map_pid,       &
+                                    geometry,      &
+                                    topology        )
 
     use reference_element_mod, only: SWB, SEB, NEB, NWB, SWT, SET, NET, NWT
 
@@ -387,6 +408,8 @@ contains
     real(kind=r_def),    intent(in)  :: chi_hat_node(3,ndf), chi_hat_vert(nverts,3)
     real(kind=r_def),    intent(in)  :: domain_x, domain_y
     real(kind=r_def),    intent(in)  :: panel_id(undf_pid)
+    integer(kind=i_def), intent(in)  :: geometry
+    integer(kind=i_def), intent(in)  :: topology
 
     ! Internal variables
     integer(kind=i_def) :: k, df, dfk, vert

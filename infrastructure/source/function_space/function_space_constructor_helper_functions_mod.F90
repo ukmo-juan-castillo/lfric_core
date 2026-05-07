@@ -1703,11 +1703,11 @@ contains
   !
   !     .+---B--+      In the following an edge is called vertical if it is
   !   .' |    .'|      normal to the horizontal plane (such as edge A), and
-  !  +---+--+'  A      horizontal if it is parallel to it (such as edge B).
+  !  +---+--+'  A      horizontal if it is perpendicular to it (such as edge B).
   !  | P |  |   |
   !  |  ,+--+---+      A face will be called horizontal if it is normal to
   !  |.'  Q | .'       the horizontal plane (such as face P) and vertical if it
-  !  +------+'         is parallel to it (such as face Q).
+  !  +------+'         is perpendicular to it (such as face Q).
   !
   !                    These are chosen to agree with the naming of W2H and
   !                    W2V.

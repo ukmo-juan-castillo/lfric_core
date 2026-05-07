@@ -30,11 +30,10 @@ use log_mod,                   only : log_event,               &
                                       LOG_LEVEL_WARNING
 use matrix_invert_mod,         only : matrix_invert_3x3
 
-use base_mesh_config_mod,      only : geometry,                &
-                                      geometry_spherical,      &
+use base_mesh_config_mod,      only : geometry_spherical,      &
                                       geometry_planar,         &
-                                      topology,                &
-                                      topology_fully_periodic
+                                      topology_fully_periodic, &
+                                      topology_non_periodic
 use finite_element_config_mod, only : coord_system,            &
                                       coord_system_xyz,        &
                                       coord_system_native
@@ -90,8 +89,7 @@ contains
 !!                               argument, and ideally should only be used for
 !!                               unit-testing.
 !------------------------------------------------------------------------------
-subroutine init_chi_transforms( geometry, topology, &
-                                mesh_collection,    &
+subroutine init_chi_transforms( mesh_collection,    &
                                 north_pole_arg, equator_lat_arg )
 
   use local_mesh_mod,            only : local_mesh_type
@@ -99,9 +97,6 @@ subroutine init_chi_transforms( geometry, topology, &
   use mesh_mod,                  only : mesh_type
 
   implicit none
-
-  integer(i_def), intent(in) :: geometry
-  integer(i_def), intent(in) :: topology
 
   type(mesh_collection_type), optional, intent(in) :: mesh_collection
   real(kind=r_def),           optional, intent(in) :: north_pole_arg(2)
@@ -114,6 +109,7 @@ subroutine init_chi_transforms( geometry, topology, &
   real(kind=r_def) :: north_pole(2)
   real(kind=r_def) :: null_island(2)
   real(kind=r_def) :: equatorial_latitude
+  integer(kind=i_def) :: geometry, topology
 
   ! -------------------------------------------------------------------------- !
   ! Extract stretching and rotation information from mesh
@@ -152,6 +148,17 @@ subroutine init_chi_transforms( geometry, topology, &
         'init_chi_transform: unable to determine mesh rotation and ' //        &
         'stretching because there are no meshes!', LOG_LEVEL_ERROR             &
       )
+    end if
+
+    if (mesh%is_geometry_spherical()) then
+      geometry = geometry_spherical
+    else
+      geometry = geometry_planar
+    end if
+    if (mesh%is_topology_non_periodic()) then
+      topology = topology_non_periodic
+    else
+      topology = topology_fully_periodic
     end if
 
     ! Extract rotation and stretching information from global mesh
@@ -253,6 +260,8 @@ end subroutine final_chi_transforms
 !-------------------------------------------------------------------------------
 subroutine chi2xyz(chi_1, chi_2, chi_3, panel_id, x, y, z)
 
+  use base_mesh_config_mod,      only : geometry, topology
+
   implicit none
 
   integer(kind=i_def), intent(in)  :: panel_id
@@ -335,6 +344,8 @@ end subroutine chi2xyz
 !-------------------------------------------------------------------------------
 subroutine chir2xyz(chi_1, chi_2, chi_3, panel_id, x, y, z)
 
+  use base_mesh_config_mod,      only : geometry, topology
+
   implicit none
 
   integer(kind=i_def), intent(in)  :: panel_id
@@ -414,6 +425,8 @@ end subroutine chir2xyz
 !-------------------------------------------------------------------------------
 subroutine chi2llr(chi_1, chi_2, chi_3, panel_id, lon, lat, radius)
 
+  use base_mesh_config_mod,      only : geometry, topology
+
   implicit none
 
   integer(kind=i_def), intent(in)  :: panel_id
@@ -485,6 +498,8 @@ end subroutine chi2llr
 !! @param[out]  radius     The third coordinate field out (radius)
 !-------------------------------------------------------------------------------
 subroutine chi2abr(chi_1, chi_2, chi_3, panel_id, alpha, beta, radius)
+
+  use base_mesh_config_mod,      only : geometry, topology
 
   implicit none
 

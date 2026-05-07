@@ -14,6 +14,10 @@ module driver_fem_mod
 
   use sci_chi_transform_mod,          only: init_chi_transforms, &
                                             final_chi_transforms
+  use base_mesh_config_mod,           only: geometry_planar,         &
+                                            geometry_spherical,      &
+                                            topology_fully_periodic, &
+                                            topology_non_periodic
   use constants_mod,                  only: i_def, l_def, str_def
   use extrusion_mod,                  only: TWOD, PRIME_EXTRUSION
   use finite_element_config_mod,      only: coord_order
@@ -36,8 +40,6 @@ module driver_fem_mod
                                             log_scratch_space
   use mesh_mod,                       only: mesh_type
   use mesh_collection_mod,            only: mesh_collection_type
-
-  use base_mesh_config_mod, only: geometry, topology
 
   implicit none
 
@@ -70,6 +72,7 @@ contains
     type(field_type)                   :: panel_id
     type(function_space_type), pointer :: fs => null()
     integer(kind=i_def)                :: chi_space, coord, i
+    integer(kind=i_def)                :: geometry, topology
 
     character(str_def) :: mesh_name
 
@@ -80,8 +83,7 @@ contains
     ! ======================================================================== !
 
     ! Initialise coordinate transformations
-    call init_chi_transforms( geometry, topology, &
-                              mesh_collection=mesh_collection )
+    call init_chi_transforms( mesh_collection=mesh_collection )
 
     ! To loop through mesh collection, get all mesh names
     ! Then get mesh from collection using these names
@@ -98,6 +100,18 @@ contains
       mesh => mesh_collection%get_mesh(all_mesh_names(i))
       mesh_name = mesh%get_mesh_name()
 
+      if (mesh%is_geometry_spherical()) then
+        geometry = geometry_spherical
+      else
+        geometry = geometry_planar
+      end if
+      if (mesh%is_topology_non_periodic()) then
+        topology = topology_non_periodic
+      else
+        topology = topology_fully_periodic
+      end if
+!      write(0,*) "JMCS fem f2:", local_rank, i, mesh%get_extrusion_id(), TWOD, &
+!                                 trim(all_mesh_names(i)), trim(mesh_name)
       ! Only create coordinates for 3D meshes
       if (mesh%get_extrusion_id() /= TWOD) then
 
@@ -125,7 +139,7 @@ contains
         end do
 
         ! Set coordinate fields --------------------------------------------------
-        call assign_coordinate_field(chi, panel_id, mesh)
+        call assign_coordinate_field(chi, panel_id, mesh, geometry, topology)
 
         ! Add fields to inventory
         call chi_inventory%copy_field_array(chi, mesh)

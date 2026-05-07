@@ -107,7 +107,7 @@ function get_exchange_map( self, &
                                               ndata, &
                                               halo_depth )
 
-  if (.not. associated(exchange_maps)) then
+  if (.not. associated(exchange_maps) .and. mesh%get_halo_depth() > 0) then
 
     !Get indices of owned and halo cells
     function_space => function_space_collection%get_fs( mesh, element_order_h, &

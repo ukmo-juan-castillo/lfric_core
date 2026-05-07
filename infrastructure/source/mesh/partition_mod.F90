@@ -644,11 +644,11 @@ contains
                                              num_halo,              &
                                              num_ghost )
 
-    use linked_list_int_mod,        only : linked_list_int_type
-    use linked_list_mod,            only : linked_list_type, &
-                                           linked_list_item_type, &
-                                           before
-    use reference_element_mod,      only : W, S, E, N
+    use linked_list_int_mod,   only : linked_list_int_type
+    use linked_list_mod,       only : linked_list_type, &
+                                      linked_list_item_type, &
+                                      before
+    use reference_element_mod, only : W, S, E, N
 
     implicit none
 
@@ -1005,26 +1005,26 @@ contains
             write(log_scratch_space,*) "JMCS S:", cell_id
             call log_event( log_scratch_space, lOG_LEVEL_INFO )
 
-            ! If this is an edge cell then add it to the list of known edge cells
-            if ( ix == start1 .or. ix == end1 ) then
-              if ( .not. known_cells%item_exists(cell_id) ) then
-                call known_cells%insert_item( linked_list_int_type( cell_id ) )
-                write(log_scratch_space,*) "JMCS S bound:", cell_id
-                call log_event( log_scratch_space, lOG_LEVEL_INFO )
-              end if
-            end if
-            if ( iy == start2 .or. &
-                (iy == tmpy .and. tmpy < rim_width) .or. &
-                (iy == end2 .and. end2 == rim_width .and. &
-                (ix <= rim_width .or. ix > num_cells_x - rim_width)) .or. &
-                (iy == rim_width .and. &
-                (ix >= rim_width .and. ix <= num_cells_x - rim_width + 1)) ) then
-              if ( .not. known_cells%item_exists(cell_id) ) then
-                call known_cells%insert_item( linked_list_int_type( cell_id ) )
-                write(log_scratch_space,*) "JMCS S bound:", cell_id
-                call log_event( log_scratch_space, lOG_LEVEL_INFO )
-              end if
-            end if
+!            ! If this is an edge cell then add it to the list of known edge cells
+!            if ( ix == start1 .or. ix == end1 ) then
+!              if ( .not. known_cells%item_exists(cell_id) ) then
+!                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+!                write(log_scratch_space,*) "JMCS S bound:", cell_id
+!                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+!              end if
+!            end if
+!            if ( iy == start2 .or. &
+!                (iy == tmpy .and. tmpy < rim_width) .or. &
+!                (iy == end2 .and. end2 == rim_width .and. &
+!                (ix <= rim_width .or. ix > num_cells_x - rim_width)) .or. &
+!                (iy == rim_width .and. &
+!                (ix >= rim_width .and. ix <= num_cells_x - rim_width + 1)) ) then
+!              if ( .not. known_cells%item_exists(cell_id) ) then
+!                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+!                write(log_scratch_space,*) "JMCS S bound:", cell_id
+!                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+!              end if
+!            end if
           end do
         end do
       end if
@@ -1045,26 +1045,26 @@ contains
               call log_event( log_scratch_space, lOG_LEVEL_INFO )
             end if
 
-            ! If this is an edge cell then add it to the list of known edge cells
-            if ( ix == start1 .or. &
-                (ix == tmpx .and. ix < rim_width) .or. &
-                (ix == end1 .and. end1 == rim_width .and. &
-                (iy > num_cells_y - rim_width .or. iy <= rim_width)) .or. &
-                (ix == rim_width .and. &
-                (iy >= rim_width .and. iy <= num_cells_y - rim_width + 1)) ) then
-              if ( .not. known_cells%item_exists(cell_id) ) then
-                call known_cells%insert_item( linked_list_int_type( cell_id ) )
-                write(log_scratch_space,*) "JMCS W bound:", cell_id
-                call log_event( log_scratch_space, lOG_LEVEL_INFO )
-              end if
-            end if
-            if ( iy == start2 .or. iy == end2 ) then
-              if ( .not. known_cells%item_exists(cell_id) ) then
-                call known_cells%insert_item( linked_list_int_type( cell_id ) )
-                write(log_scratch_space,*) "JMCS W bound:", cell_id
-                call log_event( log_scratch_space, lOG_LEVEL_INFO )
-              end if
-            end if
+!            ! If this is an edge cell then add it to the list of known edge cells
+!            if ( ix == start1 .or. &
+!                (ix == tmpx .and. ix < rim_width) .or. &
+!                (ix == end1 .and. end1 == rim_width .and. &
+!                (iy > num_cells_y - rim_width .or. iy <= rim_width)) .or. &
+!                (ix == rim_width .and. &
+!                (iy >= rim_width .and. iy <= num_cells_y - rim_width + 1)) ) then
+!              if ( .not. known_cells%item_exists(cell_id) ) then
+!                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+!                write(log_scratch_space,*) "JMCS W bound:", cell_id
+!                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+!              end if
+!            end if
+!            if ( iy == start2 .or. iy == end2 ) then
+!              if ( .not. known_cells%item_exists(cell_id) ) then
+!                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+!                write(log_scratch_space,*) "JMCS W bound:", cell_id
+!                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+!              end if
+!            end if
           end do
         end do
       end if
@@ -1088,26 +1088,26 @@ contains
               call log_event( log_scratch_space, lOG_LEVEL_INFO )
             end if
 
-            ! If this is an edge cell then add it to the list of known edge cells
-            if ( ix == start1 .or. ix == end1 ) then
-              if ( .not. known_cells%item_exists(cell_id) ) then
-                call known_cells%insert_item( linked_list_int_type( cell_id ) )
-                write(log_scratch_space,*) "JMCS N bound:", cell_id
-                call log_event( log_scratch_space, lOG_LEVEL_INFO )
-              end if
-            end if
-            if ( iy == end2 .or. &
-                (iy == tmpy .and. tmpy > num_cells_y - rim_width + 1) .or. &
-                (iy == start2 .and. start2 == num_cells_y - rim_width + 1 .and. &
-                (ix <= rim_width .or. ix > num_cells_x - rim_width)) .or. & 
-                (iy == num_cells_y - rim_width + 1 .and. &
-                (ix >= rim_width .and. ix <= num_cells_x - rim_width + 1)) ) then
-              if ( .not. known_cells%item_exists(cell_id) ) then
-                call known_cells%insert_item( linked_list_int_type( cell_id ) )
-                write(log_scratch_space,*) "JMCS N bound:", cell_id
-                call log_event( log_scratch_space, lOG_LEVEL_INFO )
-              end if
-            end if
+!            ! If this is an edge cell then add it to the list of known edge cells
+!            if ( ix == start1 .or. ix == end1 ) then
+!              if ( .not. known_cells%item_exists(cell_id) ) then
+!                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+!                write(log_scratch_space,*) "JMCS N bound:", cell_id
+!                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+!              end if
+!            end if
+!            if ( iy == end2 .or. &
+!                (iy == tmpy .and. tmpy > num_cells_y - rim_width + 1) .or. &
+!                (iy == tmpy .and. tmpy == num_cells_y - rim_width + 1 .and. &
+!                (ix <= rim_width .or. ix > num_cells_x - rim_width)) .or. & 
+!                (iy == num_cells_y - rim_width + 1 .and. &
+!                (ix >= rim_width .and. ix <= num_cells_x - rim_width + 1)) ) then
+!              if ( .not. known_cells%item_exists(cell_id) ) then
+!                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+!                write(log_scratch_space,*) "JMCS N bound:", cell_id
+!                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+!              end if
+!            end if
           end do
         end do
       end if
@@ -1131,26 +1131,26 @@ contains
               call log_event( log_scratch_space, lOG_LEVEL_INFO )
             end if
 
-            ! If this is an edge cell then add it to the list of known edge cells
-            if ( iy == start2 .or. iy == end2 ) then
-              if ( .not. known_cells%item_exists(cell_id) ) then
-                call known_cells%insert_item( linked_list_int_type( cell_id ) )
-                write(log_scratch_space,*) "JMCS E bound:", cell_id
-                call log_event( log_scratch_space, lOG_LEVEL_INFO )
-              end if
-            end if
-            if ( ix == end1 .or. &
-                (ix == tmpx .and. tmpx > num_cells_x - rim_width + 1) .or. &
-                (ix == start1 .and. start1 == num_cells_x - rim_width + 1 .and. &
-                (iy <= rim_width .or. iy > num_cells_y - rim_width)) .or. & 
-                (ix == num_cells_x - rim_width + 1 .and. &
-                (iy >= rim_width .and. iy <= num_cells_y - rim_width + 1)) ) then
-              if ( .not. known_cells%item_exists(cell_id) ) then
-                call known_cells%insert_item( linked_list_int_type( cell_id ) )
-                write(log_scratch_space,*) "JMCS E bound:", cell_id
-                call log_event( log_scratch_space, lOG_LEVEL_INFO )
-              end if
-            end if
+!            ! If this is an edge cell then add it to the list of known edge cells
+!            if ( iy == start2 .or. iy == end2 ) then
+!              if ( .not. known_cells%item_exists(cell_id) ) then
+!                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+!                write(log_scratch_space,*) "JMCS E bound:", cell_id
+!                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+!              end if
+!            end if
+!            if ( ix == end1 .or. &
+!                (ix == tmpx .and. tmpx > num_cells_x - rim_width + 1) .or. &
+!                (ix == tmpx .and. tmpx == num_cells_x - rim_width + 1 .and. &
+!                (iy <= rim_width .or. iy > num_cells_y - rim_width)) .or. & 
+!                (ix == num_cells_x - rim_width + 1 .and. &
+!                (iy >= rim_width .and. iy <= num_cells_y - rim_width + 1)) ) then
+!              if ( .not. known_cells%item_exists(cell_id) ) then
+!                call known_cells%insert_item( linked_list_int_type( cell_id ) )
+!                write(log_scratch_space,*) "JMCS E bound:", cell_id
+!                call log_event( log_scratch_space, lOG_LEVEL_INFO )
+!              end if
+!            end if
           end do
         end do
       end if
@@ -1194,6 +1194,7 @@ contains
     !known_cells_ptr => known_cells
     ! insert point is end of current list
     insert_point => known_cells%get_tail()
+    if (num_edge > 0) then
     do depth = 1,max_stencil_depth +1
       ! update number of cells currently in known_cells
       orig_num_in_list = known_cells%get_length()
@@ -1220,6 +1221,10 @@ contains
         num_ghost = known_cells%get_length() - orig_num_in_list
       end if
     end do
+    else
+      num_halo(:) = 0
+      num_ghost   = 0
+    end if
 
     ! Add all cells from the inner halos (up to max_stencil_depth) that are in a
     ! stencil around each of the owned cells, but are not part of the outer halos
